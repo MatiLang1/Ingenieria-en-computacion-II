@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Sisteam de Control de Almácigos IoT</title>
+    <link rel="stylesheet" href="estilos.css">
+</head>
+
+<body>
+
+    <h1>Monitoreo del Almácigo</h1>
+
+    <div id="actual">
+        <p>Temperatura: <span id="temp">--</span></p>
+        <p>Nivel de Luz: <span id="luz">--</span></p>
+        <p>Nivel de liquido: <span id="nivel">--</span></p>
+        <p>Estado del sistema: <span id="estado">--</span></p>
+        <p>Estado del buzzer: <span id="buzzer">--</span></p>
+    </div>
+
+    <button onclick="apagarBuzzer()">Apagar buzzer</button>
+
+    <h2>Historial (últimos 500)</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>Hora</th>
+                <th>Temperatura</th>
+                <th>Nivel de luz</th>
+                <th>Nivel de liquido</th>
+                <th>Estado del sistema</th>
+                <th>Estado del buzzer</th>
+            </tr>
+        </thead>
+        <tbody id="tabla"></tbody>
+    </table>
+
+    <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
+    <script src="Logica.js"></script>
+</body>
+
+</html>
