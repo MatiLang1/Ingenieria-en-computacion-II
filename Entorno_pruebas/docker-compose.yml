@@ -1,0 +1,30 @@
+version: "3.9"
+
+services:
+  mqtt-broker:
+    image: eclipse-mosquitto:2
+    container_name: mqtt-broker
+    ports:
+      - "1883:1883"
+    restart: unless-stopped
+
+  publisher-mock:
+    build: ./publisher_mock
+    container_name: publisher-mock
+    depends_on:
+      - mqtt-broker
+    restart: unless-stopped
+
+  subscriber:
+    build: ./subscriber
+    container_name: subscriber
+    depends_on:
+      - mqtt-broker
+    restart: unless-stopped
+
+  tests:
+    build: ./tests
+    container_name: integration-tests
+    depends_on:
+      - mqtt-broker
+      - publisher-mock
