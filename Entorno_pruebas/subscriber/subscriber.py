@@ -1,4 +1,5 @@
 import json
+import time
 from collections import deque
 import paho.mqtt.client as mqtt
 
@@ -16,10 +17,16 @@ def on_message(client, userdata, msg):
     registros.append(registro)
     print("Recibido:", registro)
 
-client = mqtt.Client()
+client = mqtt.Client(mqtt.CallbackAPIVersion.VERSION2)
 client.on_message = on_message
 
-client.connect(BROKER, PORT, 60)
+while True:
+    try:
+        client.connect(BROKER, PORT, 60)
+        break
+    except ConnectionRefusedError:
+        print("Broker no listo, reintentando en 2s")
+        time.sleep(2)
 
 client.subscribe("semillero/#")
 client.loop_forever()
