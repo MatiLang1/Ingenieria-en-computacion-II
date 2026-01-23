@@ -21,5 +21,5 @@ client.on_message = on_message
 
 client.connect(BROKER, PORT, 60)
 
-client.subscribe("almacigo/#")
+client.subscribe("semillero/#")
 client.loop_forever()
