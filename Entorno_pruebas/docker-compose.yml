@@ -6,6 +6,8 @@ services:
     container_name: mqtt-broker
     ports:
       - "1883:1883"
+    volumes:
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
     restart: unless-stopped
 
   publisher-mock:
