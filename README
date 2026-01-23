@@ -21,3 +21,6 @@ Al levantar el contenedor de Docker se levanta lo siguiente:
 
 3. Ejecutar el sistema: docker compose up --build
 
+4. Visualizar los valores publicados, recibidos y testeados (ejecutar en terminal): docker-compose logs -f 
+
+Nota: en la implementacion real se pondra a disposición del usuario un boton en la pagina web que permitirá cambiar el estado del buzzer (dicha pagina web será suscriptora para visualizar los valores y publicará el valor del estado del buzzer cuando el usuario presione el boton)
