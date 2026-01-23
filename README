@@ -1,0 +1,23 @@
+- Ejecución del entorno de pruebas:
+
+Este proyecto incluye un entorno de pruebas dockerizado que
+permite evaluar el funcionamiento del sistema sin necesidad de contar con
+el dispositivo ni sensores físicos
+
+Al levantar el contenedor de Docker se levanta lo siguiente:
+    Un broker MQTT (Mosquitto)
+    Un Mock que simula la publicacion MQTT de los datos que enviaria el ESP32
+    Un suscriptor MQTT que recibe los datos enviados por el Mock
+    Un test de integración que valida todo el sistema
+
+- Requisitos:
+    Debe tener instalado Docker
+
+- Pasos de ejecución:
+
+1. Clonar el repositorio (usar Git Bash o cualquier terminal de comandos): git clone https://github.com/MatiLang1/Ingenieria-en-computacion-II.git
+
+2. Ingresar al entorno de pruebas: cd Ingenieria-en-computacion-II/Entorno_pruebas
+
+3. Ejecutar el sistema: docker compose up --build
+

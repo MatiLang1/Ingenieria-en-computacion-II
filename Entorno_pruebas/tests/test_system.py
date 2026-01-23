@@ -13,7 +13,7 @@ def on_message(client, userdata, msg):
 client = mqtt.Client()
 client.on_message = on_message
 client.connect(BROKER, PORT, 60)
-client.subscribe("almacigo/#")
+client.subscribe("semillero/#")
 
 client.loop_start()
 time.sleep(65)
