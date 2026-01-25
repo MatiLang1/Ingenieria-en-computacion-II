@@ -1,32 +1,36 @@
-version: "3.9"
+#Este archivo define los servicios que se levantan al ejecutar docker compose up (gestiona la comunicación entre los contenedores)
+#En este caso se levantan 4 servicios (el broker MQTT, el publisher_mock MQTT, el subscriber MQTT y el test de integración MQTT)
+
+version: "3.9" #version del formato de docker compose (no es la de docker, no es obligatorio indicarla)
 
 services:
   mqtt-broker:
-    image: eclipse-mosquitto:2
-    container_name: mqtt-broker
+    image: eclipse-mosquitto:2 #descargamos la imagen del broker MQTT mosquitto
+    container_name: mqtt-broker #nombre del contenedor
     ports:
-      - "1883:1883"
+      - "1883:1883" #mapeamos el puerto virtual del contenedor al puerto de la PC (no es necesario hacerlo si no se va a acceder al broker desde la PC, en este caso no hace falta)
     volumes:
-      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf
-    restart: unless-stopped
+      - ./mosquitto.conf:/mosquitto/config/mosquitto.conf #inyectamos dentro del contenedor el archivo de configuración del broker (el mosquitto.conf)
+    restart: unless-stopped #si el contenedor falla, Docker lo reinicia (a menos que se detenga manualmente)
 
   publisher-mock:
-    build: ./publisher_mock
+    build: ./publisher_mock #ruta donde esta el Dockerfile del publisher_mock para construir la imagen
     container_name: publisher-mock
     depends_on:
-      - mqtt-broker
+      - mqtt-broker #depende de este contenedor (solo se levantara si el broker esta funcionando, es decir si ese contenedor esta levantado)
     restart: unless-stopped
 
   subscriber:
-    build: ./subscriber
+    build: ./subscriber #ruta para buscar el Dockerfile del subscriber para construir la imagen
     container_name: subscriber
     depends_on:
-      - mqtt-broker
+      - mqtt-broker #depende de este contenedor
     restart: unless-stopped
 
   tests:
-    build: ./tests
+    build: ./tests #ruta para buscar el Dockerfile del test para construir la imagen
     container_name: integration-tests
     depends_on:
-      - mqtt-broker
-      - publisher-mock
+      #el contenedor de tests depende de estos 2 (solo se levanta si los otros 2 estan levantados)
+      - mqtt-broker #depende de este contenedor
+      - publisher-mock #depende de este contenedor
