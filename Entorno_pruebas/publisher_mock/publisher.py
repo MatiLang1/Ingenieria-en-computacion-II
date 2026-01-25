@@ -1,10 +1,9 @@
 import time
-import json
 import random
 import paho.mqtt.client as mqtt
 
-BROKER = "mqtt-broker"
-PORT = 1883
+BROKER = "mqtt-broker" #nombre del contenedor del broker MQTT (definido en el nombre del servicio en el docker compose)
+PORT = 1883 #puerto del broker MQTT (definido en el servicio "mqtt-broker" en el docker compose, es el puerto virtual aunq tambien esta mapeado al de la PC)
 
 TOPICS = {
     "temp": "semillero/sensores/temperatura",
@@ -60,6 +59,13 @@ while True:
         "buzzer": buzzer
     }
 
+    #este payload lo podria convertir a JSON con json.dumps(payload) y enviar dicho objeto en un solo topic. Implica pasar el diccionario a formato json y ese json pasa a formato bytes cuando usamos el metodo publish (ya q MQTT solo maneja bytes)
+
+    #el suscriptor siempre recibe bytes en msg.payload, hay que volverlo a convertir a JSON (o a texto plano segun lo q enviamos) eso lo hacemos con el metodo .decode() y luego (si enviamos JSON) hay que parsearlo con json.loads para volver a tenerlo en un diccionario
+
+    #decode() simplemente recupera el String original tal cual lo enviaste
+    
+    #envio cada valor por separado en formato texto plano en sus topics correspondientes
     client.publish(TOPICS["temp"], payload["temperatura"])
     client.publish(TOPICS["luz"], payload["luz"])
     client.publish(TOPICS["nivel"], payload["nivel"])
