@@ -18,11 +18,16 @@ const char* password = "Password_de_la_red"; // Cambiar al Password de la red
 const char* mqtt_server = "192.168.0.24"; // IP de mi pc (q tiene corriendo al broker mqtt). Cambiar al IP del broker MQTT
 const int mqtt_port = 1883; // Puerto de la ESP32 en MQTT
 
+//variables globales para manejo del buzzer pasivo
+unsigned long tiempoInicioBuzzer = 0;
+bool buzzerState = false;
+const unsigned long DURACION_BUZZER = 15000; //15 segundos
+
 WiFiClient espClient;
 PubSubClient client(espClient);
 DHT dht(DHTPIN, DHTTYPE);
 
-bool buzzerState = false;
+
 String estadoSistema = "NORMAL";
 
 unsigned long lastPublish = 0;
@@ -37,11 +42,11 @@ void callback(char* topic, byte* payload, unsigned int length) {
   String msg;
   for (int i = 0; i < length; i++) msg += (char)payload[i];
 
-  if (String(topic) == "semillero/control/buzzer" && msg.indexOf("OFF") != -1) {
-    buzzerState = false;
-    digitalWrite(BUZZER, LOW);
-    client.publish("semillero/estado/buzzer", "{ \"buzzer\": \"OFF\" }");
-  }
+if (String(topic) == "semillero/control/buzzer" && msg.indexOf("OFF") != -1) {
+    noTone(BUZZER);
+    buzzerState = false; //cancelamos el temporizador
+    client.publish("semillero/estado/buzzer", "{ \"buzzer\": \"OFF (Manual)\" }");
+}
 }
 
 void reconnectMQTT() {
@@ -55,18 +60,23 @@ void reconnectMQTT() {
 }
 
 void evaluarEstado(float temp, int nivel) {
+  // Verificamos si hay condiciones de ALERTA
   if (temp > 35 || nivel < 500) {
     estadoSistema = "ALERTA";
     digitalWrite(LED_ROJO, HIGH);
     digitalWrite(LED_VERDE, LOW);
+    
+    // Si entra en alerta (aunque sea un segundo), activamos el buzzer
     buzzerState = true;
-    digitalWrite(BUZZER, HIGH);
+    tiempoInicioBuzzer = millis(); // RECARGA: Siempre actualiza el tiempo inicial
+    tone(BUZZER, 1000); 
+    
+    Serial.println("¡ALERTA detectada! Buzzer encendido/recargado por 15s");
   } else {
+    // Si sale de alerta, el sistema visual cambia, pero NO apagamos el buzzer acá
     estadoSistema = "NORMAL";
     digitalWrite(LED_ROJO, LOW);
     digitalWrite(LED_VERDE, HIGH);
-    buzzerState = false;
-    digitalWrite(BUZZER, LOW);
   }
 }
 
@@ -108,6 +118,34 @@ void loop() {
   if (millis() - lastPublish >= interval) {
     lastPublish = millis();
 
+    float temp = dht.readTemperature();
+    int luz = analogRead(LDR_PIN);
+    int nivel = analogRead(NIVEL_PIN);
+
+    evaluarEstado(temp, nivel);
+    publishAll(temp, luz, nivel);
+  }
+}
+
+
+void loop() {
+  if (!client.connected()) reconnectMQTT();
+  client.loop();
+
+  //logica de apagado del buzzer
+  if (buzzerState) {
+    // Si ya pasaron 15s desde la ÚLTIMA recarga
+    if (millis() - tiempoInicioBuzzer >= DURACION_BUZZER) {
+      noTone(BUZZER);
+      buzzerState = false;
+      client.publish("semillero/estado/buzzer", "{ \"buzzer\": \"OFF\" }");
+      Serial.println("Buzzer apagado");
+    }
+  }
+
+  //Publicacion periodica
+  if (millis() - lastPublish >= interval) {
+    lastPublish = millis();
     float temp = dht.readTemperature();
     int luz = analogRead(LDR_PIN);
     int nivel = analogRead(NIVEL_PIN);
