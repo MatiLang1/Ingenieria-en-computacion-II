@@ -1,8 +1,9 @@
-const client = mqtt.connect('ws://192.168.0.24:9001');
-const registros = [];
-const MAX = 500;
+const client = mqtt.connect('ws://192.168.0.24:9001'); //(asegurarse de que la IP coincida con la de la PC)
+const registros = []; //lista que contiene los registros completos
+const MAX = 500; //cantidad de registros a mostrar en la tabla (luego sobreescribe)
 
-let ultimo = {
+//este buffer agrupa los tópicos individuales en una sola muestra antes de mandarlos a la tabla (asi mostramos los 5 topicos juntos, le agregamos la hora y asi formamos un registro con 6 los campos)
+let bufferMuestra = {
     temperatura: null,
     luz: null,
     nivel: null,
@@ -10,67 +11,106 @@ let ultimo = {
     buzzer: null
 };
 
+// Objeto para actualizar los SPANS superiores individualmente
+let ultimo = {
+    temperatura: "--",
+    luz: "--",
+    nivel: "--",
+    estado: "--",
+    buzzer: "--"
+};
+
 client.on('connect', () => {
+    console.log("Conectado al Broker MQTT");
     client.subscribe('semillero/#');
 });
 
 client.on('message', (topic, message) => {
-    const data = JSON.parse(message.toString());
+    try {
+        const data = JSON.parse(message.toString());
 
-    if (topic.endsWith('temperatura')) ultimo.temperatura = data.value;
-    if (topic.endsWith('luz')) ultimo.luz = data.value;
-    if (topic.endsWith('nivel')) ultimo.nivel = data.value;
-    if (topic.endsWith('sistema')) ultimo.estado = data.estado;
-    if (topic.endsWith('buzzer')) ultimo.buzzer = data.buzzer;
+        //extraemos el valor dependiendo del topico que mande la ESP32
+        const valor = data.value !== undefined ? data.value : (data.estado || data.buzzer);
 
-    actualizarVista();
+        //Actualizamos el objeto "ultimo" para los indicadores individuales
+        if (topic.endsWith('temperatura')) {
+            ultimo.temperatura = valor;
+            bufferMuestra.temperatura = valor;
+        }
+        if (topic.endsWith('luz')) {
+            ultimo.luz = valor;
+            bufferMuestra.luz = valor;
+        }
+        if (topic.endsWith('nivel')) {
+            ultimo.nivel = valor;
+            bufferMuestra.nivel = valor;
+        }
+        if (topic.endsWith('sistema')) {
+            ultimo.estado = valor;
+            bufferMuestra.estado = valor;
+        }
+        if (topic.endsWith('buzzer')) {
+            ultimo.buzzer = valor;
+            bufferMuestra.buzzer = valor;
+        }
+
+        // Actualizamos los números en la parte superior de la web
+        actualizarIndicadoresSuperiores();
+
+        //creamos una fila en la tabla si recibimos los 5 topics. Verificamos si todos los campos del buffer tienen sus valores
+        const muestraLista = Object.values(bufferMuestra).every(v => v !== null);
+
+        if (muestraLista) {
+            const registroCompleto = {
+                hora: new Date().toLocaleTimeString(),
+                ...bufferMuestra
+            };
+
+            registros.push(registroCompleto);
+            if (registros.length > MAX) registros.shift();
+
+            // Limpiamos el buffer para la próxima tanda de mensajes
+            bufferMuestra = { temperatura: null, luz: null, nivel: null, estado: null, buzzer: null };
+
+            renderTabla();
+        }
+
+    } catch (e) {
+        console.error("Error al procesar mensaje JSON:", e);
+    }
 });
 
-function actualizarVista() {
-    if (ultimo.temperatura !== null &&
-        ultimo.luz !== null &&
-        ultimo.nivel !== null &&
-        ultimo.estado !== null &&
-        ultimo.buzzer !== null) {
-
-        document.getElementById('temp').innerText = ultimo.temperatura;
-        document.getElementById('luz').innerText = ultimo.luz;
-        document.getElementById('nivel').innerText = ultimo.nivel;
-        document.getElementById('estado').innerText = ultimo.estado;
-        document.getElementById('buzzer').innerText = ultimo.buzzer;
-
-        const registro = {
-            hora: new Date().toLocaleTimeString(),
-            ...ultimo
-        };
-
-        registros.push(registro);
-        if (registros.length > MAX) registros.shift();
-
-        renderTabla();
-    }
+//funcion para actualizar los valores del HTML que se muestran en tiempo real. Busca los elementos con los IDs temp, luz, etc definidos en el index.html. Luego reemplaza el contenido (innerText) de esos elementos con los valores mas recientes almacenados en el objeto "ultimo"
+function actualizarIndicadoresSuperiores() {
+    document.getElementById('temp').innerText = ultimo.temperatura;
+    document.getElementById('luz').innerText = ultimo.luz;
+    document.getElementById('nivel').innerText = ultimo.nivel;
+    document.getElementById('estado').innerText = ultimo.estado;
+    document.getElementById('buzzer').innerText = ultimo.buzzer;
 }
 
 function renderTabla() {
     const tbody = document.getElementById('tabla');
-    tbody.innerHTML = '';
+    // Invertimos el array para que lo más nuevo aparezca arriba
+    const registrosInvertidos = [...registros].reverse();
 
-    registros.forEach(r => {
-        const row = `<tr>
-      <td>${r.hora}</td>
-      <td>${r.temperatura}</td>
-      <td>${r.luz}</td>
-      <td>${r.nivel}</td>
-      <td>${r.estado}</td>
-      <td>${r.buzzer}</td>
-    </tr>`;
-        tbody.innerHTML += row;
-    });
+    tbody.innerHTML = registrosInvertidos.map(r => `
+        <tr>
+            <td>${r.hora}</td>
+            <td>${r.temperatura}</td>
+            <td>${r.luz}</td>
+            <td>${r.nivel}</td>
+            <td>${r.estado}</td>
+            <td>${r.buzzer}</td>
+        </tr>
+    `).join('');
 }
 
+//funcion que se ejecuta cuando se presiona el boton "Apagar buzzer". Se encarga de publicar por MQTT un mensaje con el valor "OFF" al topico "semillero/control/buzzer" para que la ESP32 lo reciba y apague el buzzer
 function apagarBuzzer() {
+    console.log("Apagando buzzer desde la Página web");
     client.publish(
         'semillero/control/buzzer',
-        JSON.stringify({ command: "OFF" })
+        JSON.stringify({ buzzer: "OFF" })
     );
 }
