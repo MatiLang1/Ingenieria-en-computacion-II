@@ -1,6 +1,17 @@
 const client = mqtt.connect('ws://192.168.0.24:9001'); //(asegurarse de que la IP coincida con la de la PC)
-const registros = []; //lista que contiene los registros completos
-const MAX = 500; //cantidad de registros a mostrar en la tabla (luego sobreescribe)
+
+// Inicializamos registros desde LocalStorage si existen
+let savedData = localStorage.getItem('historial_semillero');
+const registros = savedData ? JSON.parse(savedData) : [];
+const MAX = 500;
+
+// Renderizamos la tabla inicialmente si hay datos guardados
+// Usamos DOMContentLoaded para asegurar que la tabla exista antes de renderizar
+document.addEventListener('DOMContentLoaded', () => {
+    if (registros.length > 0) {
+        renderTabla();
+    }
+});
 
 //este buffer agrupa los tópicos individuales en una sola muestra antes de mandarlos a la tabla (asi mostramos los 5 topicos juntos, le agregamos la hora y asi formamos un registro con 6 los campos)
 let bufferMuestra = {
@@ -23,6 +34,15 @@ let ultimo = {
 client.on('connect', () => {
     console.log("Conectado al Broker MQTT");
     client.subscribe('semillero/#');
+
+    // UI Update on connect
+    const statusDiv = document.getElementById('connection-status');
+    if (statusDiv) statusDiv.innerHTML = "● En línea";
+});
+
+client.on('offline', () => {
+    const statusDiv = document.getElementById('connection-status');
+    if (statusDiv) statusDiv.innerHTML = "<span style='color:red'>● Desconectado</span>";
 });
 
 client.on('message', (topic, message) => {
@@ -48,6 +68,15 @@ client.on('message', (topic, message) => {
         if (topic.endsWith('sistema')) {
             ultimo.estado = valor;
             bufferMuestra.estado = valor;
+
+            // Actualizar color del texto del estado
+            const elEstado = document.getElementById('estado');
+            if (elEstado) {
+                elEstado.className = "value"; // reset
+                if (valor === "ALERTA") elEstado.classList.add("status-alert");
+                else if (valor === "AVISO") elEstado.classList.add("status-warning");
+                else elEstado.classList.add("status-normal");
+            }
         }
         if (topic.endsWith('buzzer')) {
             ultimo.buzzer = valor;
@@ -68,6 +97,11 @@ client.on('message', (topic, message) => {
 
             registros.push(registroCompleto);
             if (registros.length > MAX) registros.shift();
+
+            // Guardar en localstorage la cual es una memoria del navegador para que al reiniciar la pagina no se borren los registros
+            //JSON.stringify(registros): convierte la lista de 500 registros (que es un array de objetos JS) a JSON
+            //localStorage.setItem: guarda el JSON en el navegador (setItem(...) guarda ese texto bajo el nombre historial_semillero)
+            localStorage.setItem('historial_semillero', JSON.stringify(registros));
 
             // Limpiamos el buffer para la próxima tanda de mensajes
             bufferMuestra = { temperatura: null, luz: null, nivel: null, estado: null, buzzer: null };
@@ -91,6 +125,8 @@ function actualizarIndicadoresSuperiores() {
 
 function renderTabla() {
     const tbody = document.getElementById('tabla');
+    if (!tbody) return;
+
     // Invertimos el array para que lo más nuevo aparezca arriba
     const registrosInvertidos = [...registros].reverse();
 

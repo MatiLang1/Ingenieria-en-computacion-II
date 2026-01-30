@@ -3,38 +3,91 @@
 
 <head>
     <meta charset="UTF-8">
-    <title>Sisteam de Control de Almácigos IoT</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Control de Almácigos IoT</title>
     <link rel="stylesheet" href="estilos.css">
+    <!-- Fuente Inter (Google Fonts) -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
 
 <body>
 
-    <h1>Monitoreo del Almácigo</h1>
+    <div class="dashboard-container">
 
-    <div id="actual">
-        <p>Temperatura: <span id="temp">--</span></p>
-        <p>Nivel de Luz: <span id="luz">--</span></p>
-        <p>Nivel de liquido: <span id="nivel">--</span></p>
-        <p>Estado del sistema: <span id="estado">--</span></p>
-        <p>Estado del buzzer: <span id="buzzer">--</span></p>
+        <header>
+            <h1>🌱 Monitoreo del Almácigo</h1>
+            <div id="connection-status" style="color: var(--success-color); font-size: 0.9rem;">● En línea</div>
+        </header>
+
+        <!-- Grid de Métricas (Tarjetas) -->
+        <section class="metrics-grid">
+            <!-- Temperatura -->
+            <div class="card">
+                <div class="icon">🌡️</div>
+                <h3>Temperatura</h3>
+                <div class="value"><span id="temp">--</span> <span
+                        style="font-size: 1rem; color: var(--text-secondary);">°C</span></div>
+            </div>
+
+            <!-- Luz -->
+            <div class="card">
+                <div class="icon">☀️</div>
+                <h3>Nivel de Luz</h3>
+                <div class="value"><span id="luz">--</span></div>
+            </div>
+
+            <!-- Nivel -->
+            <div class="card">
+                <div class="icon">💧</div>
+                <h3>Nivel de Líquido</h3>
+                <div class="value"><span id="nivel">--</span></div>
+            </div>
+
+            <!-- Estado Sistema -->
+            <div class="card">
+                <div class="icon">🖥️</div>
+                <h3>Estado Sistema</h3>
+                <div class="value" id="estado">--</div>
+            </div>
+
+            <!-- Buzzer -->
+            <div class="card">
+                <div class="icon">🔊</div>
+                <h3>Estado Buzzer</h3>
+                <div class="value" id="buzzer">--</div>
+            </div>
+        </section>
+
+        <!-- Panel de Control -->
+        <section class="control-panel">
+            <button onclick="apagarBuzzer()">🔕 Apagar Buzzer</button>
+        </section>
+
+        <!-- Historial -->
+        <section class="table-container">
+            <div class="table-header">
+                <h3>Historial (Últimas 500 muestras)</h3>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Hora</th>
+                            <th>Temperatura (°C)</th>
+                            <th>Luz</th>
+                            <th>Nivel</th>
+                            <th>Estado Sistema</th>
+                            <th>Estado Buzzer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla">
+                        <!-- Las filas se generan con JS -->
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
     </div>
-
-    <button onclick="apagarBuzzer()">Apagar buzzer</button>
-
-    <h2>Historial (últimas 500 muestras)</h2>
-    <table>
-        <thead>
-            <tr>
-                <th>Hora</th>
-                <th>Temperatura</th>
-                <th>Nivel de luz</th>
-                <th>Nivel de liquido</th>
-                <th>Estado del sistema</th>
-                <th>Estado del buzzer</th>
-            </tr>
-        </thead>
-        <tbody id="tabla"></tbody>
-    </table>
 
     <script src="https://unpkg.com/mqtt/dist/mqtt.min.js"></script>
     <script src="Logica.js"></script>

@@ -1,23 +1,209 @@
+:root {
+    --bg-color: #0d1117;
+    --card-bg: #161b22;
+    --text-primary: #e6edf3;
+    --text-secondary: #8b949e;
+    --accent-color: #58a6ff;
+    --success-color: #238636;
+    --warning-color: #d29922;
+    --danger-color: #da3633;
+    --border-color: #30363d;
+    --font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
 body {
-    font-family: Arial;
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: var(--font-family);
+    line-height: 1.5;
     padding: 20px;
-    background: #f4f4f4;
+    display: flex;
+    justify-content: center;
+    min-height: 100vh;
+}
+
+.dashboard-container {
+    width: 100%;
+    max-width: 1200px;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+/* Header */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 20px;
+}
+
+header h1 {
+    font-size: 1.8rem;
+    font-weight: 600;
+}
+
+/* Grid de Tarjetas */
+.metrics-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+.card {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+}
+
+.card .icon {
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+    color: var(--text-secondary);
+}
+
+.card h3 {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin-bottom: 5px;
+}
+
+.card .value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+/* Colores especificos para estados */
+.status-normal {
+    color: var(--success-color);
+}
+
+.status-alert {
+    color: var(--danger-color);
+}
+
+.status-warning {
+    color: var(--warning-color);
+}
+
+/* Control Panel */
+.control-panel {
+    display: flex;
+    justify-content: flex-end;
+    padding: 10px 0;
+}
+
+button {
+    background-color: var(--danger-color);
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 10px 20px;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+}
+
+button:hover {
+    background-color: #b62324;
+}
+
+button:active {
+    transform: scale(0.98);
+}
+
+/* Tabla */
+.table-container {
+    background-color: var(--card-bg);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.table-header {
+    padding: 15px 20px;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.table-wrapper {
+    overflow-x: auto;
+    max-height: 500px;
 }
 
 table {
-    border-collapse: collapse;
     width: 100%;
-    margin-top: 15px;
+    border-collapse: collapse;
+}
+
+thead {
+    background-color: #21262d;
+    position: sticky;
+    top: 0;
 }
 
 th,
 td {
-    border: 1px solid #aaa;
-    padding: 6px;
-    text-align: center;
+    padding: 12px 20px;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
 }
 
-button {
-    margin: 10px 0;
-    padding: 10px;
+th {
+    color: var(--text-secondary);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+td {
+    color: var(--text-primary);
+    font-size: 0.9rem;
+}
+
+tr:last-child td {
+    border-bottom: none;
+}
+
+tr:hover {
+    background-color: rgba(255, 255, 255, 0.03);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: var(--bg-color);
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #555;
 }
